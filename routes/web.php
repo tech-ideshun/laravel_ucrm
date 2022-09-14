@@ -5,17 +5,13 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 use App\Http\Controllers\InertiaTestController;
+use App\Http\Controllers\ItemController;
 
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| contains the "web" middleware group. Now create something great!
-|
-*/
+Route::resource('items', ItemController::class)
+->middleware(['auth', 'verified']);
+
+
+// テスト用ルーティング-----------------
 
 Route::get('/inertia-test', function () {
     return Inertia::render('InertiaTest');  // Inertia直下のコンポーネント名を指定
@@ -33,7 +29,7 @@ Route::post('/inertia', [InertiaTestController::class, 'store'])->name('inertia.
 Route::get('/inertia/show/{id}', [InertiaTestController::class, 'show'])->name('inertia.show');
 Route::delete('/inertia/{id}', [InertiaTestController::class, 'delete'])->name('inertia.delete');   // vueだとdelete通信がそのまま使えます。
 
-
+// -------------------------------------
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
