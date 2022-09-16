@@ -5,6 +5,8 @@ namespace Database\Seeders;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
+use App\Models\Customer;
+
 class DatabaseSeeder extends Seeder
 {
     /**
@@ -18,6 +20,7 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             ItemSeeder::class,
         ]);
+        Customer::factory(1000)->create();
         // \App\Models\User::factory(10)->create();
 
         // \App\Models\User::factory()->create([
