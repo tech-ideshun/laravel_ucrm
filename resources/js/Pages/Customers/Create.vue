@@ -3,6 +3,7 @@
     import { Head } from '@inertiajs/inertia-vue3';
     import { reactive } from 'vue'
     import { Inertia } from '@inertiajs/inertia'
+    import { Core as YubinBangoCore } from "yubinbango-core2";
 
 const form = reactive({
     name: null,
@@ -16,8 +17,15 @@ const form = reactive({
     memo: null
 })
 
-const storeItem = () => {
-    Inertia.post('/items', form)
+const fetchAddress = () => {
+    new YubinBangoCore(String(form.postcode), (value) => {
+        // console.log(value)
+        form.address = value.region + value.locality + value.street
+    })
+}
+
+const storeCustomer = () => {
+    Inertia.post('/customers', form)
 }
     </script>
     
@@ -36,7 +44,7 @@ const storeItem = () => {
                     <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                         <div class="p-6 bg-white border-b border-gray-200">
                             <section class="text-gray-600 body-font relative">
-                                <form @submit.prevent="storeItem">
+                                <form @submit.prevent="storeCustomer">
                                 <div class="container px-5 py-8 mx-auto">
                                     
                                     <div class="lg:w-1/2 md:w-2/3 mx-auto">
@@ -72,7 +80,8 @@ const storeItem = () => {
                                         <div class="p-2 w-full">
                                             <div class="relative">
                                                 <label for="postcode" class="leading-7 text-sm text-gray-600">郵便番号</label>
-                                                <input type="number" id="postcode" name="postcode" v-model="form.postcode" class="w-full bg-gray-100 bg-opacity-50 rounded border border-gray-300 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out">
+                                                <!-- @change="" で値が変わってカーソルが外れたタイミングで実行される-->
+                                                <input type="number" id="postcode" name="postcode" @change="fetchAddress" v-model="form.postcode" class="w-full bg-gray-100 bg-opacity-50 rounded border border-gray-300 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out">
                                             </div>
                                         </div>
 
