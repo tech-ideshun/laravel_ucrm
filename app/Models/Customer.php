@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+use App\Models\Purchase;
+
 class Customer extends Model
 {
     use HasFactory;
@@ -20,6 +22,11 @@ class Customer extends Model
         'gender',
         'memo'
     ];
+
+    public function purchases()
+    {
+        return $this->hasMany(Purchase::class);
+    }
 
     // スコープメソッドはメソッド名の頭に【scope】とつけるのがお約束
     // $inputはvue画面で検索画面があり、検索された際に引数として渡されます。
