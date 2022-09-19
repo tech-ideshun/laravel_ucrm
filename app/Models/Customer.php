@@ -9,6 +9,18 @@ class Customer extends Model
 {
     use HasFactory;
 
+    protected $fillable = [
+        'name',
+        'kana',
+        'tel',
+        'email',
+        'postcode',
+        'address',
+        'birthday',
+        'gender',
+        'memo'
+    ];
+
     // スコープメソッドはメソッド名の頭に【scope】とつけるのがお約束
     // $inputはvue画面で検索画面があり、検索された際に引数として渡されます。
     public function scopeSearchCustomers($query, $input = null)
