@@ -17,9 +17,12 @@ class PurchaseFactory extends Factory
      */
     public function definition()
     {
+        $decade = $this->faker->dateTimeThisDecade; // 過去10年分
+        $created_at = $decade->modify('+2 years');  // +2年
         return [
             'customer_id' => rand(1, Customer::count()),
             'status' => $this->faker->boolean,
+            'created_at' => $created_at
         ];
     }
 }

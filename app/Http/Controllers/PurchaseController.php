@@ -13,6 +13,8 @@ use App\Models\Item;
 
 use Illuminate\Support\Facades\DB;
 
+use App\Models\Order;
+
 class PurchaseController extends Controller
 {
     /**
@@ -22,7 +24,18 @@ class PurchaseController extends Controller
      */
     public function index()
     {
-        //
+        // dd(Order::paginate(50));
+
+        $orders = Order::groupBy('id')
+        ->selectRaw('id, sum(subtotal) as total, customer_name, status, created_at')
+        ->orderBy('id', 'asc')
+        ->paginate(50);
+
+        // dd($orders);
+
+        return Inertia::render('Purchases/Index' , [
+            'orders' => $orders
+        ]);
     }
 
     /**
@@ -90,7 +103,22 @@ class PurchaseController extends Controller
      */
     public function show(Purchase $purchase)
     {
-        //
+        // 小計(itemごとの小計)
+        $items = Order::where('id', $purchase->id)->get();  // グローバルスコープで4つのテーブルを既にLeftJoinしてます。
+
+        // 合計
+        $order = Order::groupBy('id')
+        ->where('id', $purchase->id)
+        ->selectRaw('id, sum(subtotal) as total, customer_name, status, created_at')
+        ->orderBy('created_at', 'desc')
+        ->get();
+
+        // dd($items, $order);
+
+        return Inertia::render('Purchases/Show', [
+            'items' => $items,
+            'order' => $order
+        ]);
     }
 
     /**
@@ -101,7 +129,42 @@ class PurchaseController extends Controller
      */
     public function edit(Purchase $purchase)
     {
-        //
+        // 仕様的にstatus(キャンセル済み→0)が0の場合、編集画面に移行するボタンはないが直リンクできると編集画面に入れるので0だったら404画面を返す
+        if($purchase->status === 0) {
+            abort(404);
+        }
+        $purchase = Purchase::find($purchase->id);
+
+        $allItems = Item::select('id', 'name', 'price')->get();
+
+        $items = [];
+
+        foreach($allItems as $allitem) {
+            $quantity = 0;
+            foreach($purchase->items as $item) {
+                if($allitem->id === $item->id) {
+                    $quantity = $item->pivot->quantity;
+                }
+            }
+            array_push($items, [
+                'id' => $allitem->id,
+                'name' => $allitem->name,
+                'price' => $allitem->price,
+                'quantity' => $quantity,
+            ]);
+        }
+        // dd($items);  // 購入している商品だけ$quantityが入っている状態
+
+        $order = Order::groupBy('id')
+        ->where('id', $purchase->id)
+        ->selectRaw('id, customer_id, customer_name, status, created_at')
+        ->orderBy('created_at', 'desc')
+        ->get();
+
+        return Inertia::render('Purchases/Edit', [
+            'items' => $items,
+            'order' => $order,
+        ]);
     }
 
     /**
@@ -113,7 +176,30 @@ class PurchaseController extends Controller
      */
     public function update(UpdatePurchaseRequest $request, Purchase $purchase)
     {
-        //
+        // dd($request, $purchase);
+
+        DB::beginTransaction(); // transactionの開始
+        try{
+            $purchase->status = $request->status;
+            $purchase->save();
+
+            $items = [];
+
+            foreach($request->items as $item){
+                $items = $items + [
+                    $item['id'] => [
+                        'quantity' => $item['quantity']
+                    ]
+                ];
+            }
+            // dd($items);
+
+            $purchase->items()->sync($items);
+            DB::commit();   // transactionを完全に実行する
+            return to_route('dashboard');
+        } catch(\Exception $e){
+            DB::rollBack(); // 失敗時の処理。try部分で一部成功していた部分を全て白紙にする
+        }
     }
 
     /**

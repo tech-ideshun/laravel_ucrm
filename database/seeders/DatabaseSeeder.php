@@ -26,9 +26,9 @@ class DatabaseSeeder extends Seeder
 
         $items = Item::all();
 
-        Purchase::factory(100)->create()
-        ->each(function(Purchase $purchase) use ($items) {
-            $purchase->items()->attach(
+        Purchase::factory(30000)->create()
+        ->each(function(Purchase $purchase) use ($items) {  //foreach的な
+            $purchase->items()->attach( // 中間テーブルへ１件ずつダミーデータを作成
                 $items->random(rand(1,3))->pluck('id')->toArray(),
                 ['quantity' => rand(1, 5)]
             );
