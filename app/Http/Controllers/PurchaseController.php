@@ -81,7 +81,7 @@ class PurchaseController extends Controller
                 ]);
             }
                 //$purchase->items()->attach
-                // └purchasesテーブルとitemsテーブルの中間テーブルにデータを保存したい時には【attach()】を使う
+                // └purchasesテーブルとitemsテーブルの中間テーブルにデータを【追加】したい時には【attach()】を使う
                 // 第一引数は中間テーブルに保存するidで指定。item_idは適切ではない。
                 // $purchase->idと取得出来ているのは最初のコードで先にpurchasesテーブルに登録をしており、それを変数に入れているからオブジェクトが完成している
             
@@ -185,7 +185,7 @@ class PurchaseController extends Controller
 
             $items = [];
 
-            foreach($request->items as $item){
+            foreach($request->items as $item){  // 中間テーブルへ個数を変更、更新するためオリジナルの配列を作成
                 $items = $items + [
                     $item['id'] => [
                         'quantity' => $item['quantity']
@@ -194,7 +194,13 @@ class PurchaseController extends Controller
             }
             // dd($items);
 
-            $purchase->items()->sync($items);
+            $purchase->items()->sync($items);   // syncメソッド→中間テーブルへ値を【更新】するメソッド
+            // storeで中間テーブルへ値を【追加】する際は【->attach()】で処理(多分syncでもいける)
+            // 今回は中間テーブルの値を【更新】する際なので【->sync()】で処理
+            // 元となるModel->リレーション先テーブルメソッド名->->sync([配列]);で値を更新させれる
+            // 参考サイト:https://blog.capilano-fw.com/?p=7407
+
+
             DB::commit();   // transactionを完全に実行する
             return to_route('dashboard');
         } catch(\Exception $e){
