@@ -5,6 +5,8 @@ use Illuminate\Support\Facades\Route;
 
 use App\Models\Customer;
 
+use App\Http\Controllers\Api\AnalysisController;    // 同じ名前だけどApiフォルダー下のコントローラーです
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -16,6 +18,9 @@ use App\Models\Customer;
 |
 */
 // auth:sanctumはログインしていたら通信できるということ
+Route::middleware('auth:sanctum')
+->get('/analysis', [AnalysisController::class, 'index'])->name('api.analysis');
+
 Route::middleware('auth:sanctum')
 ->get('/searchCustomers', function (Request $request) {
     return Customer::searchCustomers($request->search)->select('id', 'name', 'kana', 'tel')->paginate(50);
