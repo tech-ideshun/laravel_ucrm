@@ -1,63 +1,15 @@
-<?php
+<?php   // サービスファイルのひな形はないので一から手動で入力
 
-namespace App\Http\Controllers;
-
-use Illuminate\Http\Request;
-use Inertia\Inertia;
-
-use App\Models\Order;
-
+namespace App\Services;
 use Illuminate\Support\Facades\DB;
 
-class AnalysisController extends Controller
+class DecileService
 {
-    public function index()
+    // static → クラス名::perDayと呼べるようにしている
+    public static function decile($subQuery)
     {
-        // $startDate = '2022-08-01';
-        // $endDate = '2022-08-31';
-
-        // $period2 = Order::betweenDate($startDate, $endDate)->paginate(50);
-        // dd($period2);
-
-        // $period = Order::betweenDate($startDate, $endDate)
-        // ->groupBy('id') // globalScopeのselectをさらにidでグループ化して
-        // ->selectRaw('id, sum(subtotal) as total, customer_name, status, created_at')    // selectのカラムを最低限+小計をpurchases.idごとにsumする
-        // ->orderBy('created_at')
-        // ->paginate(50);
-
-        // dd($period);
-
-        // ↓ 練習①---------
-        // ① 購買id(purchasesテーブルのid)毎に売上をまとめ、dateをSQLのmethodでフォーマットした状態でサブクエリを作る
-        // $subQuery = Order::betweenDate($startDate, $endDate)
-        // ->where('status', true)
-        // ->groupBy('id') // purchasesテーブルのIdでグルーピング
-        // ->selectRaw('id, sum(subtotal) as totalPerPurchase, DATE_FORMAT(created_at, "%Y%m%d") as date');    // DATE_FORMATはSQLのメソッドです。
-
-        // // ② ①で作ったサブクエリをgroupByで日毎にまとめる
-        // $data = DB::table($subQuery)
-        // ->groupBy('date')
-        // ->selectRaw('date, sum(totalPerPurchase) as total')
-        // ->get();
-
-        // dd($data);
-        // ↑ 練習①---------
-        
-        return Inertia::render('Analysis');
-    }
-
-    /**
-     * データ抽出でつかっていた、消すのもったいないので残す用。
-     * 今はServices/DecileService.phpに移動している
-     */
-    public function decile()
-    {
-        $startDate = '2022-08-01';
-        $endDate = '2022-08-31';
-
         // 1.購買ID（purchases.id）ごとにまとめる
-        $subQuery = Order::betweenDate($startDate, $endDate)
-        ->groupBy('id')
+        $subQuery = $subQuery->groupBy('id')    // api/AnalysisContollerでテーブル抽出しているので追加でidでグルーピングする
         ->selectRaw('id, customer_id, customer_name, SUM(subtotal) as totalPerPurchase');
         // dd($subQuery);
 
@@ -131,8 +83,12 @@ class AnalysisController extends Controller
         $data = DB::table($subQuery)
         ->selectRaw('decile, average, totalPerGroup, round(100 * totalPerGroup / @total, 1) as totalRatio')->get();
 
-        // dd($data);
+        // グラフように上記$dataで日別に絞りこんだデータ群から【data】【total】だけを変数に抽出
+        $labels = $data->pluck('decile');
+        $totals = $data->pluck('totalPerGroup');
 
-        return Inertia::render('Analysis');
+        // コントローラーで呼ばれた際に配列で返す意図がある
+        return [$data, $labels, $totals];
+
     }
 }
